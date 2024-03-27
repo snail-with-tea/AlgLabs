@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"flag"
+	"io/fs"
 	"sync"
 
 	// "flag"
@@ -113,7 +114,10 @@ func main() {
 	pt_mr := make([]plotter.XYer, size)
 	pt_qi := make([]plotter.XYer, size)
 	pt_qr := make([]plotter.XYer, size)
-
+	err := os.Mkdir("./assets", fs.ModeDir)
+	if err != nil {
+		fmt.Println(err)
+	}
 	for t := range 3 {
 		tip = t
 		for i, el := range elements {
@@ -183,16 +187,16 @@ func main() {
 		switch tip {
 		case 0:
 			plt.Title.Text = "Random numbers"
-			plt.Save(16*vg.Centimeter, 8*vg.Centimeter, "assets/random.svg")
-			plt.Save(vg.Points(800), vg.Points(400), "assets/random.png")
+			plt.Save(16*vg.Centimeter, 8*vg.Centimeter, "./assets/random.svg")
+			plt.Save(vg.Points(800), vg.Points(400), "./assets/random.png")
 		case 1:
 			plt.Title.Text = "Already sorted"
-			plt.Save(16*vg.Centimeter, 8*vg.Centimeter, "assets/sorted.svg")
-			plt.Save(vg.Points(800), vg.Points(400), "assets/sorted.png")
+			plt.Save(16*vg.Centimeter, 8*vg.Centimeter, "./assets/sorted.svg")
+			plt.Save(vg.Points(800), vg.Points(400), "./assets/sorted.png")
 		case 2:
 			plt.Title.Text = "Reverse sorted"
-			plt.Save(16*vg.Centimeter, 8*vg.Centimeter, "assets/reversed.svg")
-			plt.Save(vg.Points(800), vg.Points(400), "assets/reversed.png")
+			plt.Save(16*vg.Centimeter, 8*vg.Centimeter, "./assets/reversed.svg")
+			plt.Save(vg.Points(800), vg.Points(400), "./assets/reversed.png")
 		}
 
 	}
