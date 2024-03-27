@@ -1,4 +1,4 @@
-module snail-with-tea.alg/L3
+module github.com/snail-with-tea/AlgLabs/L3
 
 go 1.22.1
 

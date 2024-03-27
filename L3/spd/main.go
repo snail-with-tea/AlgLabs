@@ -13,11 +13,11 @@ import (
 	"strings"
 	"time"
 
+	s "github.com/snail-with-tea/AlgLabs/L3"
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/plotter"
 	"gonum.org/v1/plot/plotutil"
 	"gonum.org/v1/plot/vg"
-	s "snail-with-tea.alg/L3"
 )
 
 func getArr() []int {

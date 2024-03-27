@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	s "github.com/snail-with-tea/AlgLabs/L3"
 	"os"
-	s "snail-with-tea.alg/L3"
 	"strconv"
 	"strings"
 )
