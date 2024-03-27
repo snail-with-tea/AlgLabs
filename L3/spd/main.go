@@ -27,11 +27,15 @@ func getArr() []int {
 	if err != nil {
 		panic(err)
 	}
-	strs := strings.Split(line[0:len(line)-1], " ")
-	nums := make([]int, len(strs))
-	for i, str := range strs {
-		if nums[i], err = strconv.Atoi(str); err != nil || nums[i] < 1 {
-			panic(fmt.Sprint(str, " is not a positive integer"))
+	line = strings.Trim(line, " \r\n\t")
+	strs := strings.Split(line, " ")
+	nums := []int{}
+	num := 0
+	for _, str := range strs {
+		if num, err = strconv.Atoi(str); err != nil {
+			fmt.Println(fmt.Sprint(str, " is not an integer: skipping"))
+		} else {
+			nums = append(nums, num)
 		}
 	}
 	return nums
