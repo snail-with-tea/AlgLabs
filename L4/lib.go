@@ -2,38 +2,57 @@ package l4
 
 import (
 	"fmt"
+	"strings"
 )
 
 var Verbose = false
 
-func BM_BC_Search[T comparable](txt, pat []T) {
-	tab := BM_BC_Shift(pat)
-	n := len(txt)
-	m := len(pat)
+func BM_BC_Search(txt, pat string) []int {
+	t := []rune(txt)
+	p := []rune(pat)
+	tab := BM_BC_Shift(p)
+	n := len(t)
+	m := len(p)
 	i := m - 1
+	found := []int{}
 	for i < n {
 		j := m - 1
 		k := i
-		for j >= 0 && pat[j] == txt[k] {
+
+		if Verbose {
+			fmt.Println()
+			fmt.Print(strings.Repeat(" ", i))
+			fmt.Println("i")
+			fmt.Println(txt)
+			fmt.Print(strings.Repeat(" ", i-j))
+			fmt.Println(pat)
+			fmt.Print(strings.Repeat(" ", i))
+			fmt.Println("j")
+		}
+
+		for j >= 0 && p[j] == t[k] {
 			j--
 			k--
 		}
 		if j < 0 {
-			fmt.Println("pattern at ", k+1)
+			if Verbose {
+				fmt.Println("pattern at ", k+2)
+			}
+			found = append(found, k+2)
 			i++
 		} else {
-			if t, ok := tab[txt[k]]; ok {
+			if t, ok := tab[t[k]]; ok {
 				i += t
 			} else {
 				i += m
 			}
 		}
 	}
-
+	return found
 }
 
-func BM_BC_Shift[T comparable](pat []T) map[T]int {
-	shift := map[T]int{}
+func BM_BC_Shift(pat []rune) map[rune]int {
+	shift := map[rune]int{}
 	m := len(pat)
 	shift[pat[m-1]] = m
 	for j := range m - 1 {
@@ -45,29 +64,48 @@ func BM_BC_Shift[T comparable](pat []T) map[T]int {
 			shift[pat[j]] = m - j - 1
 		}
 	}
+
+	if Verbose {
+		fmt.Println("Bad character heuristic:")
+		u, d := string(""), string("")
+		for i, v := range pat {
+			u += string(v) + " "
+			d += fmt.Sprint(shift[pat[i]]) + " "
+		}
+		fmt.Println("", u, "\n", d)
+
+	}
+
 	return shift
 }
 
-func BM_GS_Search[T comparable](txt, pat []T) {
+func BM_GS_Search(txt, pat string) []int {
+	t := []rune(txt)
+	p := []rune(pat)
 	s := 0
-	m := len(pat)
-	n := len(txt)
-	shift := BM_GS_Shift(pat)
+	m := len(p)
+	n := len(t)
+	shift := BM_GS_Shift(p)
+	found := []int{}
 	for s <= n-m {
 		j := m - 1
-		for j >= 0 && pat[j] == txt[s+j] {
+		for j >= 0 && p[j] == t[s+j] {
 			j -= 1
 		}
 		if j < 0 {
-			fmt.Println("pattern at ", s)
+			if Verbose {
+				fmt.Println("pattern at ", s+1)
+			}
+			found = append(found, s+1)
 			s += shift[0]
 		} else {
 			s += shift[j+1]
 		}
 	}
+	return found
 }
 
-func BM_GS_Shift[T comparable](pat []T) []int {
+func BM_GS_Shift(pat []rune) []int {
 	m := len(pat)
 	bordr := make([]int, m+1)
 	shift := make([]int, m+1)
@@ -99,31 +137,55 @@ func BM_GS_Shift[T comparable](pat []T) []int {
 	return shift
 }
 
-func KMPSearch[T comparable](txt, pat []T) {
-	lps := LPSuffix(pat)
-	n, m := len(txt), len(pat)
+func KMPSearch(txt, pat string) []int {
+	t := []rune(txt)
+	p := []rune(pat)
+	lps := LPPrefix(p)
+	n, m := len(t), len(p)
 	i, j := 0, 0
+	found := []int{}
 	for m-j <= n-i {
 		if j == m {
-			fmt.Println("pattern at ", i-j)
+			if Verbose {
+				fmt.Println()
+				fmt.Print(strings.Repeat(" ", i))
+				fmt.Println("i")
+				fmt.Println(txt)
+				fmt.Print(strings.Repeat(" ", i-j))
+				fmt.Println(pat)
+				fmt.Print(strings.Repeat(" ", i))
+				fmt.Println("j")
+				fmt.Println("pattern at ", i-j+1)
+			}
+			found = append(found, i-j+1)
 			j = lps[j-1]
 			continue
 		}
-		if pat[j] == txt[i] {
+		if p[j] == t[i] {
 			i++
 			j++
 			continue
+		}
+		if Verbose {
+			fmt.Println()
+			fmt.Print(strings.Repeat(" ", i))
+			fmt.Println("i")
+			fmt.Println(txt)
+			fmt.Print(strings.Repeat(" ", i-j))
+			fmt.Println(pat)
+			fmt.Print(strings.Repeat(" ", i))
+			fmt.Println("j")
 		}
 		if j != 0 {
 			j = lps[j-1]
 		} else {
 			i++
 		}
-
 	}
+	return found
 }
 
-func LPSuffix[T comparable](pat []T) []int {
+func LPPrefix(pat []rune) []int {
 	m := len(pat)
 	s := 0
 	lps := make([]int, m)
@@ -142,5 +204,17 @@ func LPSuffix[T comparable](pat []T) []int {
 			i++
 		}
 	}
+
+	if Verbose {
+		fmt.Println("Longest possible prefix:")
+		u, d := string(""), string("")
+		for i, v := range pat {
+			u += string(v) + " "
+			d += fmt.Sprint(lps[i]) + " "
+		}
+		fmt.Println("", u, "\n", d)
+
+	}
+
 	return lps
 }
