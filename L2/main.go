@@ -9,15 +9,21 @@ import (
 	"strings"
 )
 
+var Verbosity = 0
+
 func insSort(arr []int) []int {
 	if len(arr) < 2 {
 		return arr
 	}
 	for i := 1; i < len(arr); i++ {
-		for j := i; j > 0; j-- {
-			if arr[j] < arr[j-1] {
-				arr[j], arr[j-1] = arr[j-1], arr[j]
+		for j := i; j > 0 && arr[j] < arr[j-1]; j-- {
+			if Verbosity > 1 {
+				fmt.Println(arr)
 			}
+			arr[j], arr[j-1] = arr[j-1], arr[j]
+		}
+		if Verbosity > 0 {
+			fmt.Println(arr, "\n---")
 		}
 	}
 	return arr
@@ -34,8 +40,13 @@ func selSort(arr []int) []int {
 				min = j
 			}
 			arr[min], arr[i] = arr[i], arr[min]
+			if Verbosity > 1 {
+				fmt.Println(arr)
+			}
 		}
-
+		if Verbosity > 0 {
+			fmt.Println(arr, "\n---")
+		}
 	}
 	return arr
 }
@@ -45,26 +56,35 @@ func bubSort(arr []int) []int {
 		return arr
 	}
 	for i := 1; i < len(arr); i++ {
-		for j := 0; j < len(arr)-i; j++ {
-			if arr[j] > arr[j+1] {
-				arr[j], arr[j+1] = arr[j+1], arr[j]
+		for j := 0; j < len(arr)-i && arr[j] > arr[j+1]; j++ {
+			arr[j], arr[j+1] = arr[j+1], arr[j]
+			if Verbosity > 1 {
+				fmt.Println(arr)
 			}
+		}
+		if Verbosity > 0 {
+			fmt.Println(arr, "\n---")
 		}
 	}
 	return arr
 }
 
 func getArr() []int {
+	fmt.Println("Enter array separated by spaces")
 	stdin := bufio.NewReader(os.Stdin)
 	line, err := stdin.ReadString('\n')
 	if err != nil {
 		panic(err)
 	}
-	strs := strings.Split(line[0:len(line)-1], " ")
-	nums := make([]int, len(strs))
-	for i, str := range strs {
-		if nums[i], err = strconv.Atoi(str); err != nil {
-			panic(fmt.Sprint(str, " is not an integer"))
+	line = strings.Trim(line, " \r\n\t")
+	strs := strings.Split(line, " ")
+	nums := []int{}
+	num := 0
+	for _, str := range strs {
+		if num, err = strconv.Atoi(str); err != nil {
+			fmt.Println(fmt.Sprint(str, " is not an integer: skipping"))
+		} else {
+			nums = append(nums, num)
 		}
 	}
 	return nums
@@ -73,6 +93,8 @@ func getArr() []int {
 func main() {
 	ts := flag.String("s", "", "shorthand for sorttype")
 	tf := flag.String("sorttype", "", "select sort type [insert|select|bubble]")
+	vs := flag.Int("v", 0, "shorthand for verbosity")
+	vf := flag.Int("verbosity", 0, "how verbose the output should be [0..2]")
 	flag.Parse()
 	a := flag.Arg(0)
 	if a == "" {
@@ -85,6 +107,8 @@ func main() {
 		flag.Usage()
 		return
 	}
+
+	Verbosity = max(Verbosity, *vs, *vf)
 	sorter := func(arr []int) []int {
 		return arr
 	}
