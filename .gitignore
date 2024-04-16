@@ -1,11 +1,5 @@
-L4/L4*
-L4/.*
-L3/assets
-L3/L3*
-L3/.*
-L2/L2*
-L2/.*
-L1/L1*
-L1/.*
+L*/assets
+L*/L*
+L*/.*
 gost*
 qoi
