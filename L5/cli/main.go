@@ -8,8 +8,10 @@ import (
 
 func main() {
 	size, conns := l5.EnterSimConn()
-	m := l5.SimConnToMatr(size, conns)
-	for _, l := range m {
-		fmt.Println(l)
-	}
+	fmt.Println(conns)
+	mst_k := l5.MST_Kruskal(size, conns)
+	fmt.Println(mst_k)
+	matr := l5.SimConnToMatr(size, conns)
+	mst_p := l5.MST_Prim(matr)
+	fmt.Println(mst_p)
 }

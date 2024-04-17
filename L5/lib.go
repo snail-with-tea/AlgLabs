@@ -2,7 +2,7 @@ package l5
 
 import (
 	"fmt"
-	"sort"
+	l3 "github.com/snail-with-tea/AlgLabs/L3"
 )
 
 type Conn struct {
@@ -32,6 +32,7 @@ func EnterSimMatr() [][]int {
 		}
 		for x := range size - y - 1 {
 			fmt.Scan(&g[y][x+y+1])
+			g[x+y+1][y] = g[y][x+y+1]
 		}
 	}
 	return g
@@ -66,28 +67,108 @@ func SimConnToMatr(size int, conns []Conn) [][]int {
 }
 
 func SimMatrToSimConn(matr [][]int) (int, []Conn) {
-	size_y := len(matr)
-	size_x := len(matr[0])
+	size := len(matr)
 	conns := []Conn{}
-	for y := range size_y - 1 {
-		for x := range size_x - y - 1 {
+	for y := range size - 1 {
+		for x := range size - y - 1 {
 			c := Conn{x, y, matr[y][x+1]}
 			conns = append(conns, c)
 		}
 	}
-	return max(size_x, size_y), conns
+	return size, conns
 }
 
-func MST_Kruskal(size int, conns []Conn) []Conn {
-	sort.Slice(conns, func(a, b int) bool {
-		return conns[a].Len < conns[b].Len
+func MST_Kruskal(size int, cons []Conn) []Conn {
+	l3.QuickConf(cons, func(a, b int) bool {
+		return cons[a].Len > cons[b].Len
 	})
+
 	mst := []Conn{}
+
+	setindx := make([]int, size)
+	setnext := 1
+	c_len := len(cons)
+	for c_len > 0 {
+		c_len--
+		con := cons[c_len]
+		cons = cons[:c_len]
+		z1 := setindx[con.Vert1] == 0
+		z2 := setindx[con.Vert2] == 0
+		if !z1 && !z2 {
+			continue
+		}
+		mst = append(mst, con)
+		if z1 && z2 {
+			setindx[con.Vert1] = setnext
+			setindx[con.Vert2] = setnext
+			setnext++
+		}
+		if z1 && !z2 {
+			setindx[con.Vert1] = setindx[con.Vert2]
+		}
+		if !z1 && z2 {
+			setindx[con.Vert2] = setindx[con.Vert1]
+		}
+
+	}
 
 	return mst
 
 }
 
-func MST_Prim() {
+func MST_Prim(matr [][]int) []Conn {
+	size := len(matr)
+	used := make([]bool, size)
+	dot := 42 % size
+	used[dot] = true
+	unused := size - 1
+	conns := []Conn{}
+	mst := []Conn{}
+	for unused > 0 {
+		con := Conn{0, 0, 0}
 
+		for i := range size {
+			l := matr[dot][i]
+			if l == 0 || used[i] {
+				continue
+			}
+
+			conns = append(conns, Conn{dot, i, l})
+		}
+
+		for _, c := range conns {
+			if con.Len == 0 || c.Len < con.Len {
+				con.Len = c.Len
+				con.Vert1 = c.Vert1
+				con.Vert2 = c.Vert2
+			}
+		}
+		if con.Len == 0 {
+			continue
+		}
+
+		used[con.Vert2] = true
+		unused--
+		dot = con.Vert2
+
+		mst = append(mst, con)
+
+		// clear up active connections
+		// OPTIONAL
+		con_len := len(conns)
+		for i := 0; i < con_len; {
+			if conns[i].Vert2 == con.Vert2 {
+				if i+1 < con_len {
+					conns = append(conns[:i], conns[i+1:]...)
+				} else {
+					conns = conns[:i]
+				}
+				con_len--
+			} else {
+				i++
+			}
+		}
+	}
+	// fmt.Println(mst)
+	return mst
 }

@@ -140,7 +140,7 @@ func hoarePart(arr []int, l int, r int) int {
 	m := l + (r-l)/2
 	lpt, rpt := l, r
 	pivot := arr[m]
-	for true {
+	for {
 		for arr[lpt] < pivot {
 			lpt++
 		}
@@ -154,5 +154,47 @@ func hoarePart(arr []int, l int, r int) int {
 		lpt++
 		rpt--
 	}
-	return rpt
+}
+
+func QuickConf[T any](arr []T, check func(l, r int) bool) {
+	QuickRecSortConf(arr, 0, len(arr)-1, check)
+}
+
+func QuickRecSortConf[T any](arr []T, l int, r int, check func(l, r int) bool) {
+	if l < r {
+		m := hoareConf(arr, l, r, check)
+		if Verbosity == 1 {
+			fmt.Println(arr)
+		}
+		if Verbosity > 1 {
+			fmt.Println(arr, l, m, r)
+		}
+		QuickRecSortConf(arr, l, m, check)
+		QuickRecSortConf(arr, m+1, r, check)
+	}
+}
+
+func hoareConf[T any](arr []T, l, r int, less func(l, r int) bool) int {
+	m := l + (r-l)/2
+	lpt, rpt := l, r
+	for {
+		for less(lpt, m) {
+			lpt++
+		}
+		for less(m, rpt) {
+			rpt--
+		}
+		if lpt >= rpt {
+			return rpt
+		}
+		switch m {
+		case lpt:
+			m = rpt
+		case rpt:
+			m = lpt
+		}
+		arr[lpt], arr[rpt] = arr[rpt], arr[lpt]
+		lpt++
+		rpt--
+	}
 }
