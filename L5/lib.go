@@ -35,6 +35,7 @@ func EnterSimMatr() [][]int {
 			g[x+y+1][y] = g[y][x+y+1]
 		}
 	}
+	fmt.Println()
 	return g
 }
 
@@ -171,4 +172,71 @@ func MST_Prim(matr [][]int) []Conn {
 	}
 	// fmt.Println(mst)
 	return mst
+}
+
+func MST_Count(matr [][]int) int {
+	size := len(matr)
+	kirh := make([][]int, size)
+	for i := range size {
+		kirh[i] = make([]int, size)
+	}
+	for y := range size {
+		con_count := 0
+		for x := range size {
+			if matr[y][x] != 0 {
+				con_count++
+				kirh[y][x] = -1
+			}
+		}
+		kirh[y][y] = con_count
+	}
+	for y := range size {
+		fmt.Println(kirh[y])
+	}
+	m := Minor(kirh, size, 1, 1)
+	return Det(m, size-1)
+}
+
+func Det(matr [][]int, size int) int {
+	if size <= 0 {
+		return 0
+	}
+	if size == 1 {
+		return matr[0][0]
+	}
+	if size == 2 {
+		return matr[0][0]*matr[1][1] - matr[0][1]*matr[1][0]
+	}
+	det := 0
+	for x := range size {
+		minr := Minor(matr, size, x, 0)
+		m_det := Det(minr, size-1)
+		sign := -1
+		if x%2 == 0 {
+			sign = 1
+		}
+		det += sign * matr[0][x] * m_det
+	}
+	return det
+}
+
+func Minor(matr [][]int, size, x, y int) [][]int {
+	minr := make([][]int, size-1)
+	i_m := 0
+	for i_o := range size {
+		if i_o == y {
+			continue
+		}
+		j_m := 0
+		minr[i_m] = make([]int, size-1)
+		for j_o := range size {
+			if j_o == x {
+				continue
+			}
+			minr[i_m][j_m] = matr[i_o][j_o]
+			j_m++
+		}
+		i_m++
+	}
+	return minr
 }
