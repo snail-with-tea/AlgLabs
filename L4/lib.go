@@ -10,44 +10,47 @@ var Verbose = false
 func BM_BC_Search(txt, pat string) []int {
 	t := []rune(txt)
 	p := []rune(pat)
-	tab := BM_BC_Shift(p)
+	bchar := BM_BC_Shift(p)
+	fmt.Print("Searching...")
 	n := len(t)
 	m := len(p)
-	i := m - 1
 	found := []int{}
+	i := m - 1
 	for i < n {
 		j := m - 1
-		k := i
-
+		pos := i - j
 		if Verbose {
-			fmt.Println()
-			fmt.Print(strings.Repeat(" ", i))
-			fmt.Println("i")
+			fmt.Print("\n", strings.Repeat(" ", i), "i\n")
 			fmt.Println(txt)
-			fmt.Print(strings.Repeat(" ", i-j))
-			fmt.Println(pat)
-			fmt.Print(strings.Repeat(" ", i))
-			fmt.Println("j")
+			fmt.Print(strings.Repeat(" ", pos))
+			fmt.Print(pat)
 		}
 
-		for j >= 0 && p[j] == t[k] {
-			j--
+		k := i
+
+		for j >= 0 && t[k] == p[j] {
+			if Verbose {
+				fmt.Print("\n", strings.Repeat(" ", pos+j))
+				fmt.Print("^")
+			}
 			k--
+			j--
 		}
 		if j < 0 {
 			if Verbose {
-				fmt.Println("pattern at ", k+2)
+				fmt.Print(pos + 1)
 			}
-			found = append(found, k+2)
-			i++
-		} else {
-			if t, ok := tab[t[k]]; ok {
-				i += t
-			} else {
-				i += m
-			}
+			found = append(found, pos+1)
+			i += bchar[p[m-1]]
+			continue
 		}
+		add, ok := bchar[t[k]]
+		if !ok {
+			add = m
+		}
+		i += add
 	}
+	fmt.Println()
 	return found
 }
 
@@ -56,13 +59,7 @@ func BM_BC_Shift(pat []rune) map[rune]int {
 	m := len(pat)
 	shift[pat[m-1]] = m
 	for j := range m - 1 {
-		if s, ok := shift[pat[j]]; ok {
-			if m-j-1 < s {
-				shift[pat[j]] = m - j - 1
-			}
-		} else {
-			shift[pat[j]] = m - j - 1
-		}
+		shift[pat[j]] = m - j - 1
 	}
 
 	if Verbose {
@@ -144,38 +141,33 @@ func KMPSearch(txt, pat string) []int {
 	n, m := len(t), len(p)
 	i, j := 0, 0
 	found := []int{}
+	skipdraw := false
 	for m-j <= n-i {
-		if j == m {
-			if Verbose {
-				fmt.Println()
-				fmt.Print(strings.Repeat(" ", i))
-				fmt.Println("i")
-				fmt.Println(txt)
-				fmt.Print(strings.Repeat(" ", i-j))
-				fmt.Println(pat)
-				fmt.Print(strings.Repeat(" ", i))
-				fmt.Println("j")
-				fmt.Println("pattern at ", i-j+1)
-			}
-			found = append(found, i-j+1)
-			j = lps[j-1]
-			continue
-		}
-		if p[j] == t[i] {
-			i++
-			j++
-			continue
-		}
-		if Verbose {
+		if Verbose && !skipdraw {
 			fmt.Println()
 			fmt.Print(strings.Repeat(" ", i))
 			fmt.Println("i")
 			fmt.Println(txt)
 			fmt.Print(strings.Repeat(" ", i-j))
 			fmt.Println(pat)
-			fmt.Print(strings.Repeat(" ", i))
-			fmt.Println("j")
 		}
+		if j == m {
+			if Verbose {
+				fmt.Println("pattern at ", i-j+1)
+			}
+			found = append(found, i-j+1)
+			j = lps[j-1]
+			skipdraw = false
+			continue
+		}
+		if p[j] == t[i] {
+			fmt.Print(strings.Repeat(" ", i), "^\n")
+			i++
+			j++
+			skipdraw = true
+			continue
+		}
+		skipdraw = false
 		if j != 0 {
 			j = lps[j-1]
 		} else {

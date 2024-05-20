@@ -57,7 +57,7 @@ func main() {
 	pat := get_line()
 	f := search(txt, pat)
 	if len(f) > 0 {
-		fmt.Println("Found pattern at ", f)
+		fmt.Println("Found pattern at", f)
 	} else {
 		fmt.Println("Pattern not found")
 	}

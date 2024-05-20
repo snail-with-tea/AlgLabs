@@ -11,6 +11,9 @@ import (
 
 var Verbosity = 0
 
+// 87 80 84 17 66 94 69 23 79 15
+// 15 1 91 30 57 91 80 13 79 96
+
 func insSort(arr []int) []int {
 	if len(arr) < 2 {
 		return arr
@@ -18,7 +21,7 @@ func insSort(arr []int) []int {
 	for i := 1; i < len(arr); i++ {
 		for j := i; j > 0 && arr[j] < arr[j-1]; j-- {
 			if Verbosity > 1 {
-				fmt.Println(arr)
+				fmt.Println(arr, "|", arr[j], "<", arr[j-1])
 			}
 			arr[j], arr[j-1] = arr[j-1], arr[j]
 		}
@@ -36,14 +39,15 @@ func selSort(arr []int) []int {
 	for i := 0; i < len(arr)-1; i++ {
 		min := i
 		for j := i; j < len(arr); j++ {
-			if arr[j] < arr[min] {
-				min = j
+			if arr[j] > arr[min] {
+				continue
 			}
-			arr[min], arr[i] = arr[i], arr[min]
+			min = j
 			if Verbosity > 1 {
-				fmt.Println(arr)
+				fmt.Println(arr, "| min:", arr[min], "at", min)
 			}
 		}
+		arr[min], arr[i] = arr[i], arr[min]
 		if Verbosity > 0 {
 			fmt.Println(arr, "\n---")
 		}
@@ -56,10 +60,12 @@ func bubSort(arr []int) []int {
 		return arr
 	}
 	for i := 1; i < len(arr); i++ {
-		for j := 0; j < len(arr)-i && arr[j] > arr[j+1]; j++ {
-			arr[j], arr[j+1] = arr[j+1], arr[j]
-			if Verbosity > 1 {
-				fmt.Println(arr)
+		for j := 0; j < len(arr)-1; j++ {
+			if arr[j] > arr[j+1] {
+				arr[j], arr[j+1] = arr[j+1], arr[j]
+				if Verbosity > 1 {
+					fmt.Println(arr, "|", arr[j+1], ">", arr[j])
+				}
 			}
 		}
 		if Verbosity > 0 {

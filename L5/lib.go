@@ -2,6 +2,8 @@ package l5
 
 import (
 	"fmt"
+	"strings"
+
 	l3 "github.com/snail-with-tea/AlgLabs/L3"
 )
 
@@ -11,7 +13,9 @@ type Conn struct {
 	Len   int
 }
 
-func EnterSimMatr() [][]int {
+var Verbose = false
+
+func EnterSimMatr() (int, [][]int) {
 	fmt.Print("Enter node count: ")
 	size := 0
 	fmt.Scanln(&size)
@@ -36,12 +40,13 @@ func EnterSimMatr() [][]int {
 		}
 	}
 	fmt.Println()
-	return g
+	return size, g
 }
 
 func EnterSimConn() (int, []Conn) {
 	conns := []Conn{}
-	fmt.Println("Enter connections (vert1,vert2,len):")
+	fmt.Println("Enter connections (vert1,vert2,len)")
+	fmt.Println("(to stop vert1 = vert2 or len = 0):")
 	size := 0
 	for {
 		c := Conn{0, 0, 0}
@@ -55,7 +60,7 @@ func EnterSimConn() (int, []Conn) {
 	return size + 1, conns
 }
 
-func SimConnToMatr(size int, conns []Conn) [][]int {
+func SimConnToSimMatr(size int, conns []Conn) [][]int {
 	g := make([][]int, size)
 	for y := range size {
 		g[y] = make([]int, size)
@@ -67,24 +72,29 @@ func SimConnToMatr(size int, conns []Conn) [][]int {
 	return g
 }
 
-func SimMatrToSimConn(matr [][]int) (int, []Conn) {
-	size := len(matr)
+func SimMatrToSimConn(size int, matr [][]int) []Conn {
 	conns := []Conn{}
 	for y := range size - 1 {
 		for x := range size - y - 1 {
-			c := Conn{x, y, matr[y][x+1]}
-			conns = append(conns, c)
+			c := Conn{y, x + y + 1, matr[y][x+y+1]}
+			if c.Len != 0 {
+				conns = append(conns, c)
+			}
 		}
 	}
-	return size, conns
+	return conns
 }
 
-func MST_Kruskal(size int, cons []Conn) []Conn {
+func MST_Kruskal(size int, cons []Conn) ([]Conn, int) {
 	l3.QuickConf(cons, func(a, b int) bool {
 		return cons[a].Len > cons[b].Len
 	})
-
+	if Verbose {
+		fmt.Println("Connections sorted by length:")
+		PrintCon(cons, true)
+	}
 	mst := []Conn{}
+	weight := 0
 
 	setindx := make([]int, size)
 	setnext := 1
@@ -95,10 +105,11 @@ func MST_Kruskal(size int, cons []Conn) []Conn {
 		cons = cons[:c_len]
 		z1 := setindx[con.Vert1] == 0
 		z2 := setindx[con.Vert2] == 0
-		if !z1 && !z2 {
+		if !z1 && !z2 && setindx[con.Vert1] == setindx[con.Vert2] {
 			continue
 		}
 		mst = append(mst, con)
+		weight += con.Len
 		if z1 && z2 {
 			setindx[con.Vert1] = setnext
 			setindx[con.Vert2] = setnext
@@ -110,21 +121,32 @@ func MST_Kruskal(size int, cons []Conn) []Conn {
 		if !z1 && z2 {
 			setindx[con.Vert2] = setindx[con.Vert1]
 		}
-
+		if z1 || z2 {
+			// fmt.Println(setindx)
+			continue
+		}
+		adder := min(setindx[con.Vert2], setindx[con.Vert1])
+		merge := max(setindx[con.Vert2], setindx[con.Vert1])
+		for i := range setindx {
+			if setindx[i] == merge {
+				setindx[i] = adder
+			}
+		}
+		// fmt.Println(setindx)
 	}
 
-	return mst
+	return mst, weight
 
 }
 
-func MST_Prim(matr [][]int) []Conn {
-	size := len(matr)
+func MST_Prim(size int, matr [][]int) ([]Conn, int) {
 	used := make([]bool, size)
 	dot := 42 % size
 	used[dot] = true
 	unused := size - 1
 	conns := []Conn{}
 	mst := []Conn{}
+	weight := 0
 	for unused > 0 {
 		con := Conn{0, 0, 0}
 
@@ -153,12 +175,12 @@ func MST_Prim(matr [][]int) []Conn {
 		dot = con.Vert2
 
 		mst = append(mst, con)
+		weight += con.Len
 
-		// clear up active connections
-		// OPTIONAL
+		// clear up connections with used points
 		con_len := len(conns)
 		for i := 0; i < con_len; {
-			if conns[i].Vert2 == con.Vert2 {
+			if conns[i].Vert2 == dot {
 				if i+1 < con_len {
 					conns = append(conns[:i], conns[i+1:]...)
 				} else {
@@ -171,29 +193,36 @@ func MST_Prim(matr [][]int) []Conn {
 		}
 	}
 	// fmt.Println(mst)
-	return mst
+	return mst, weight
 }
 
-func MST_Count(matr [][]int) int {
+func ST_Count(matr [][]int) int {
 	size := len(matr)
-	kirh := make([][]int, size)
+	kirc := make([][]int, size)
 	for i := range size {
-		kirh[i] = make([]int, size)
+		kirc[i] = make([]int, size)
 	}
 	for y := range size {
 		con_count := 0
 		for x := range size {
 			if matr[y][x] != 0 {
 				con_count++
-				kirh[y][x] = -1
+				kirc[y][x] = -1
 			}
 		}
-		kirh[y][y] = con_count
+		kirc[y][y] = con_count
 	}
-	for y := range size {
-		fmt.Println(kirh[y])
+	/*
+		for y := range size {
+			fmt.Println(kirh[y])
+		}
+	*/
+	if Verbose {
+		fmt.Println("Kirchhoff matrix for graph:")
+		PrintMat(kirc, size)
 	}
-	m := Minor(kirh, size, 1, 1)
+
+	m := Minor(kirc, size, 0, 0)
 	return Det(m, size-1)
 }
 
@@ -239,4 +268,61 @@ func Minor(matr [][]int, size, x, y int) [][]int {
 		i_m++
 	}
 	return minr
+}
+
+func PrintMat(matr [][]int, size int) {
+	col_len := 0
+	for y := range size {
+		col_len = max(col_len, len([]rune(fmt.Sprint(y))))
+		for x := range size {
+			col_len = max(col_len, len([]rune(fmt.Sprint(matr[y][x]))))
+		}
+	}
+	fcl := len([]rune(fmt.Sprint(size)))
+	if fcl-3 > 0 {
+		fmt.Print(strings.Repeat(" ", fcl-3))
+	}
+
+	fmt.Print("Y\\X")
+
+	for x := range size {
+		ccl := len([]rune(fmt.Sprint(x)))
+		fmt.Print(strings.Repeat(" ", col_len-ccl+1), x)
+	}
+	fmt.Println()
+	for y := range size {
+		fnl := len([]rune(fmt.Sprint(y)))
+		fmt.Print(strings.Repeat(" ", max(fcl, 3)-fnl), y)
+		for x := range size {
+			ccl := len([]rune(fmt.Sprint(matr[y][x])))
+			fmt.Print(strings.Repeat(" ", col_len-ccl+1), matr[y][x])
+		}
+		fmt.Println()
+	}
+}
+
+func PrintCon(conns []Conn, reverse bool) {
+	total := len(conns)
+	vertx1, vertx2, length := 5, 5, 3
+	for _, c := range conns {
+		vertx1 = max(vertx1, len([]rune(fmt.Sprint(c.Vert1))))
+		vertx2 = max(vertx2, len([]rune(fmt.Sprint(c.Vert1))))
+		length = max(length, len([]rune(fmt.Sprint(c.Vert1))))
+	}
+	fmt.Print(strings.Repeat(" ", max(vertx1-5, 0)+1), "Vert1")
+	fmt.Print(strings.Repeat(" ", max(vertx2-5, 0)+1), "Vert2")
+	fmt.Print(strings.Repeat(" ", max(length-3, 0)+1), "Len")
+	fmt.Println()
+	for i := range conns {
+		c := conns[i]
+		if reverse {
+			c = conns[total-i-1]
+		}
+		cc1 := len([]rune(fmt.Sprint(c.Vert1)))
+		cc2 := len([]rune(fmt.Sprint(c.Vert2)))
+		cln := len([]rune(fmt.Sprint(c.Len)))
+		fmt.Print(strings.Repeat(" ", max(vertx1-cc1, 0)+1), c.Vert1)
+		fmt.Print(strings.Repeat(" ", max(vertx2-cc2, 0)+1), c.Vert2)
+		fmt.Print(strings.Repeat(" ", max(length-cln, 0)+1), c.Len, "\n")
+	}
 }
